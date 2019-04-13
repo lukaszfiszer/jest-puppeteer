@@ -1,7 +1,7 @@
 {
   "name": "jest-dev-server",
   "description": "Starts a server before your Jest tests and tears it down after.",
-  "version": "4.0.0",
+  "version": "4.1.1",
   "main": "index.js",
   "repository": "https://github.com/smooth-code/jest-puppeteer/tree/master/packages/jest-dev-server",
   "author": "Greg Bergé <berge.greg@gmail.com>",
@@ -20,10 +20,10 @@
   "dependencies": {
     "chalk": "^2.4.2",
     "cwd": "^0.10.0",
-    "find-process": "^1.2.1",
-    "inquirer": "^6.2.2",
+    "find-process": "^1.4.1",
+    "prompts": "^2.0.4",
     "spawnd": "^4.0.0",
     "tree-kill": "^1.2.1",
-    "wait-port": "^0.2.2"
+    "wait-on": "^3.2.0"
   }
 }

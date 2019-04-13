@@ -4,19 +4,19 @@ import net from 'net'
 import chalk from 'chalk'
 import spawnd from 'spawnd'
 import cwd from 'cwd'
-import waitPort from 'wait-port'
+import waitOn from 'wait-on'
 import findProcess from 'find-process'
 import { promisify } from 'util'
 import treeKill from 'tree-kill'
-import inquirer from 'inquirer'
+import prompts from 'prompts'
 
 const DEFAULT_CONFIG = {
   debug: false,
   options: {},
   launchTimeout: 5000,
-  host: null,
+  host: 'localhost',
   port: null,
-  protocol: null,
+  protocol: 'http',
   usedPortAction: 'ask',
 }
 
@@ -139,16 +139,14 @@ async function setupJestServer(providedConfig, index) {
     async ask() {
       console.log('')
       const answers = await outOfStin(() =>
-        inquirer.prompt([
-          {
-            type: 'confirm',
-            name: 'kill',
-            message: `Another process is listening on ${
-              config.port
-            }. Should I kill it for you? On linux, this may require you to enter your password.`,
-            default: true,
-          },
-        ]),
+        prompts({
+          type: 'confirm',
+          name: 'kill',
+          message: `Another process is listening on ${
+            config.port
+          }. Should I kill it for you? On linux, this may require you to enter your password.`,
+          initial: true,
+        }),
       )
       if (answers.kill) {
         const [portProcess] = await findProcess('port', config.port)
@@ -176,12 +174,23 @@ async function setupJestServer(providedConfig, index) {
     if (isPortTaken) {
       await usedPortHandler()
     }
+
+    if (config.usedPortAction === 'ignore' && isPortTaken) {
+      console.log('')
+      console.log('Port is already taken. Assuming server is already running.')
+    } else {
+      runServer(config, index)
+    }
+  } else {
+    runServer(config, index)
   }
 
-  runServer(config, index)
-
   if (config.port) {
-    const { launchTimeout } = config
+    const { launchTimeout, protocol, host, port } = config
+
+    const opts = {
+      resources: [`${protocol}://${host}:${port}`],
+    }
 
     let timeout
     await Promise.race([
@@ -197,12 +206,7 @@ async function setupJestServer(providedConfig, index) {
           launchTimeout,
         )
       }),
-      waitPort({
-        host: config.host,
-        output: 'silent',
-        port: config.port,
-        protocol: config.protocol,
-      }),
+      waitOn(opts),
     ])
     clearTimeout(timeout)
   }
